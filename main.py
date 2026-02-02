@@ -1,15 +1,84 @@
 import numpy as np
 import pygame
+import random
 
 
 class Ant:
+
+    FIDELITY_MIN = 254  # phi_low
+    FIDELITY_DELTA = 0  # delta phi
+
+    PHEROMONE_DEPOSITION = 8  # tau
+    PHEROMONE_SATURATION = 0  # C_s
+
+    TURNING_KERNEL_RAW = np.array([0.36, 0.047, 0.008, 0.004])
+    TURNING_KERNEL = np.concatenate(
+        (np.array([1 - sum(TURNING_KERNEL_RAW)]), TURNING_KERNEL_RAW)
+    )
+
     def __init__(self, position, heading):
-        self.position = position
-        self.heading = heading
+        self.position: np.ndarray = position
+        self.heading: Direction = heading
+
+    def move(self, world: np.ndarray) -> bool:
+        """
+        Updates heading and position according to trail following algorithm.
+
+        Returns:
+            bool: Representing if the ant is still inside the world
+        """
+
+        # pad world to avoid boundary checks
+        adj = np.pad(world, pad_width=1, mode="constant", constant_values=-1)[
+            self.position[1] : self.position[1] + 3,
+            self.position[0] : self.position[0] + 3,
+        ].copy()
+
+        adj[1, 1] = -1  # ignore current position
+        # adj[tuple(-self.heading + 1)] = -1  # ignore backward position
+
+        strongest_trail = np.argwhere(adj == np.max(adj))
+
+        # CHANCE TO LOSE TRAIL AND KERNEL
+        if np.random.randint(0, 256) > 256 / (256 - self.FIDELITY_MIN):
+            self.heading = self.turning_kernel()
+        # GO FORWARD IF TRAIL
+        elif adj[tuple(-self.heading + 1)] > 0:
+            # heading unchanged
+            pass
+        # ONE STRONGEST TRAIL
+        elif len(strongest_trail) == 1:
+            self.heading = strongest_trail[0] - 1
+        # FORKING ALGORITHM, RANDOM IF FORKS TIED
+        else:
+            self.heading = self.turning_kernel()
+
+        # MOVE
+        self.position += self.heading
+
+        if (
+            self.position[0] <= 0
+            or self.position[1] <= 0
+            or self.position[0] >= world.shape[1]
+            or self.position[1] >= world.shape[0]
+        ):
+            return False
+
+        return True
+
+    def turning_kernel(self):
+        """
+        Returns new heading
+        """
+        steps = np.random.choice(len(self.TURNING_KERNEL), p=self.TURNING_KERNEL)
+        dir = random.choice([-1, 1])
+        return Direction.rotate(self.heading, dir * steps)
 
 
 class App:
-    def __init__(self):
+    def __init__(self, world, ants):
+        self.world = world
+        self.ants = ants
         self._running = True
         self._display_surf = None
         self.scale = 3
@@ -26,8 +95,11 @@ class App:
         self.surface = pygame.Surface((256, 256))
         for y in range(256):
             for x in range(256):
-                v = world[y, x]
+                v = 255 - np.clip(self.world[y, x] * 10, 0, 255)
                 self.surface.set_at((x, y), (v, v, v))
+
+        for ant in self.ants:
+            self.surface.set_at((ant.position[0], ant.position[1]), (255, 0, 0))
 
         self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
 
@@ -51,8 +123,66 @@ class App:
         self.on_cleanup()
 
 
-world = np.random.rand(256, 256) * 256
+class Direction:
+    UP = np.array([0, -1])
+    UP_RIGHT = np.array([1, -1])
+    RIGHT = np.array([1, 0])
+    DOWN_RIGHT = np.array([1, 1])
+    DOWN = np.array([0, 1])
+    DOWN_LEFT = np.array([-1, 1])
+    LEFT = np.array([-1, 0])
+    UP_LEFT = np.array([-1, -1])
+
+    ALL = [UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT]
+
+    @staticmethod
+    def rotate(direction: np.ndarray, steps: int) -> np.ndarray:
+        """
+        Rotates by 45 degrees * steps
+        """
+        for idx, d in enumerate(Direction.ALL):
+            if np.array_equal(d, direction):
+                return Direction.ALL[(idx + steps) % 8]
+
+
+SPAWN_POINT = np.array([128, 128])
+
 
 if __name__ == "__main__":
-    theApp = App()
+    # random.seed(42)
+    # np.random.seed(42)
+    world = np.zeros((256, 256))
+    ants = set()
+
+    for t in range(1500):
+        # SPAWN
+        ants.add(
+            Ant(
+                position=SPAWN_POINT.copy(),
+                heading=random.choice(
+                    [
+                        Direction.UP_RIGHT,
+                        Direction.DOWN_RIGHT,
+                        Direction.DOWN_LEFT,
+                        Direction.UP_LEFT,
+                    ]
+                ),
+            )
+        )
+
+        for ant in list(ants):
+            # DEPOSIT
+            world[tuple(ant.position.astype(int))] += Ant.PHEROMONE_DEPOSITION
+
+            # MOVE
+            if not ant.move(world):
+                # remove if out of bounds
+                ants.discard(ant)
+
+        # EVAPORATE
+        world = np.maximum(world - 1, 0)
+
+    print("Num remaining ants:", len(ants))
+
+    theApp = App(world, ants)
     theApp.on_execute()
