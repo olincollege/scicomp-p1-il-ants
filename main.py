@@ -1,11 +1,12 @@
 import numpy as np
 import pygame
 import random
+import time
 
 
 class Ant:
 
-    FIDELITY_MIN = 254  # phi_low
+    FIDELITY_MIN = 255  # phi_low
     FIDELITY_DELTA = 0  # delta phi
 
     PHEROMONE_DEPOSITION = 8  # tau
@@ -35,12 +36,12 @@ class Ant:
         ].copy()
 
         adj[1, 1] = -1  # ignore current position
-        # adj[tuple(-self.heading + 1)] = -1  # ignore backward position
+        adj[tuple(-self.heading + 1)] = -1  # ignore backward position
 
         strongest_trail = np.argwhere(adj == np.max(adj))
 
         # CHANCE TO LOSE TRAIL AND KERNEL
-        if np.random.randint(0, 256) > 256 / (256 - self.FIDELITY_MIN):
+        if np.random.randint(0, 256) >= self.FIDELITY_MIN:
             self.heading = self.turning_kernel()
         # GO FORWARD IF TRAIL
         elif adj[tuple(-self.heading + 1)] > 0:
@@ -149,6 +150,7 @@ SPAWN_POINT = np.array([128, 128])
 
 
 if __name__ == "__main__":
+    start = time.time()
     # random.seed(42)
     # np.random.seed(42)
     world = np.zeros((256, 256))
@@ -182,6 +184,9 @@ if __name__ == "__main__":
         # EVAPORATE
         world = np.maximum(world - 1, 0)
 
+    end = time.time()
+
+    print(f"Simulation time: {end - start:.2f} s")
     print("Num remaining ants:", len(ants))
 
     theApp = App(world, ants)
