@@ -6,7 +6,7 @@ import time
 
 class Ant:
 
-    FIDELITY_MIN = 255  # phi_low
+    FIDELITY_MIN = 247  # phi_low
     FIDELITY_DELTA = 0  # delta phi
 
     PHEROMONE_DEPOSITION = 8  # tau
@@ -21,8 +21,8 @@ class Ant:
         self.position: np.ndarray = position
         self.heading: Direction = heading
 
-    def get_or_default(
-        self, world: np.ndarray, pos: tuple, default: float = 0
+    def get_pheromone_value(
+        self, world: np.ndarray, pos: np.ndarray, default: float = 0
     ) -> float:
         """
         Helper for getting world value with boundary check
@@ -32,6 +32,19 @@ class Ant:
             return world[y, x]
         return default
 
+    def fidelity_check(self, world: np.ndarray) -> bool:
+        """
+        Returns bool representing whether the ant loses trail fidelity
+        """
+        curr = world[self.position[1], self.position[0]]
+        if curr < self.PHEROMONE_SATURATION:
+            thresh = (
+                self.FIDELITY_DELTA / self.PHEROMONE_SATURATION
+            ) * curr + self.FIDELITY_MIN
+        else:
+            thresh = self.FIDELITY_MIN + self.FIDELITY_DELTA
+        return np.random.randint(0, 256) >= thresh
+
     def move(self, world: np.ndarray) -> bool:
         """
         Updates heading and position according to trail following algorithm.
@@ -39,17 +52,15 @@ class Ant:
         Returns:
             bool: Representing if the ant is still inside the world
         """
-
-        # pad world to avoid boundary checks
         left_dir: np.ndarray = Direction.rotate(self.heading, 1)
         right_dir: np.ndarray = Direction.rotate(self.heading, -1)
 
-        fwd = self.get_or_default(world, tuple(self.position + self.heading), 0)
-        left = self.get_or_default(world, tuple(self.position + left_dir), 0)
-        right = self.get_or_default(world, tuple(self.position + right_dir), 0)
+        fwd = self.get_pheromone_value(world, self.position + self.heading)
+        left = self.get_pheromone_value(world, self.position + left_dir, 0)
+        right = self.get_pheromone_value(world, self.position + right_dir, 0)
 
         # CHANCE TO LOSE TRAIL AND KERNEL
-        if np.random.randint(0, 256) >= self.FIDELITY_MIN:
+        if self.fidelity_check(world):
             self.heading = self.turning_kernel()
         # GO FORWARD IF TRAIL
         elif fwd > 0:
@@ -166,7 +177,7 @@ if __name__ == "__main__":
     world = np.zeros((256, 256))
     ants = []
 
-    for t in range(800):
+    for t in range(500):
         # SPAWN
         ants.append(
             Ant(
