@@ -21,6 +21,17 @@ class Ant:
         self.position: np.ndarray = position
         self.heading: Direction = heading
 
+    def get_or_default(
+        self, world: np.ndarray, pos: tuple, default: float = 0
+    ) -> float:
+        """
+        Helper for getting world value with boundary check
+        """
+        x, y = pos
+        if 0 <= x < world.shape[1] and 0 <= y < world.shape[0]:
+            return world[y, x]
+        return default
+
     def move(self, world: np.ndarray) -> bool:
         """
         Updates heading and position according to trail following algorithm.
@@ -30,27 +41,26 @@ class Ant:
         """
 
         # pad world to avoid boundary checks
-        adj = np.pad(world, pad_width=1, mode="constant", constant_values=-1)[
-            self.position[1] : self.position[1] + 3,
-            self.position[0] : self.position[0] + 3,
-        ].copy()
+        left_dir: np.ndarray = Direction.rotate(self.heading, 1)
+        right_dir: np.ndarray = Direction.rotate(self.heading, -1)
 
-        adj[1, 1] = -1  # ignore current position
-        adj[tuple(-self.heading + 1)] = -1  # ignore backward position
-
-        strongest_trail = np.argwhere(adj == np.max(adj))
+        fwd = self.get_or_default(world, tuple(self.position + self.heading), 0)
+        left = self.get_or_default(world, tuple(self.position + left_dir), 0)
+        right = self.get_or_default(world, tuple(self.position + right_dir), 0)
 
         # CHANCE TO LOSE TRAIL AND KERNEL
         if np.random.randint(0, 256) >= self.FIDELITY_MIN:
             self.heading = self.turning_kernel()
         # GO FORWARD IF TRAIL
-        elif adj[tuple(-self.heading + 1)] > 0:
+        elif fwd > 0:
             # heading unchanged
             pass
-        # ONE STRONGEST TRAIL
-        elif len(strongest_trail) == 1:
-            self.heading = strongest_trail[0] - 1
-        # FORKING ALGORITHM, RANDOM IF FORKS TIED
+        # FOLLOW STRONGER FORK
+        elif left > right:
+            self.heading = left_dir
+        elif right > left:
+            self.heading = right_dir
+        # RANDOM IF FORKS TIED
         else:
             self.heading = self.turning_kernel()
 
@@ -151,14 +161,14 @@ SPAWN_POINT = np.array([128, 128])
 
 if __name__ == "__main__":
     start = time.time()
-    # random.seed(42)
-    # np.random.seed(42)
+    random.seed(42)
+    np.random.seed(42)
     world = np.zeros((256, 256))
-    ants = set()
+    ants = []
 
-    for t in range(1500):
+    for t in range(800):
         # SPAWN
-        ants.add(
+        ants.append(
             Ant(
                 position=SPAWN_POINT.copy(),
                 heading=random.choice(
@@ -172,14 +182,14 @@ if __name__ == "__main__":
             )
         )
 
-        for ant in list(ants):
+        for ant in ants.copy():
             # DEPOSIT
-            world[tuple(ant.position.astype(int))] += Ant.PHEROMONE_DEPOSITION
+            world[ant.position[1], ant.position[0]] += Ant.PHEROMONE_DEPOSITION
 
             # MOVE
             if not ant.move(world):
                 # remove if out of bounds
-                ants.discard(ant)
+                ants.remove(ant)
 
         # EVAPORATE
         world = np.maximum(world - 1, 0)
