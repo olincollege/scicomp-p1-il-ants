@@ -1,14 +1,23 @@
 import pygame
+from simulation import Simulation
 
 
 class App:
     SCALE = 3
 
-    def __init__(self, world, ants):
-        self.world = world
-        self.ants = ants
+    def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
+        """
+        Args:
+            sim (Simulation): Simulation object to visualize
+            static (bool): Whether to run simulation or just visualize final state
+            frame_rate (int, optional): Frame rate for visualization. Defaults to 60.
+        """
+        self.sim = sim
+        self.static = static
+        self.frame_rate = frame_rate
         self._running = True
         self._display_surf = None
+        self._clock = None
 
     def on_init(self):
         pygame.init()
@@ -16,21 +25,22 @@ class App:
             (256 * self.SCALE, 256 * self.SCALE), pygame.HWSURFACE | pygame.DOUBLEBUF
         )
         self._display_surf.fill((255, 255, 255))
+        self._clock = pygame.time.Clock()
 
         self._running = True
-
-        # Draw pheromone trails as circles
-        self.draw_pheromones(self.world)
-
-        # Draw ants as red circles
-        self.draw_ants(self.ants)
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
 
     def on_loop(self):
+        if not self.static:
+            self.sim.step()
+        self._display_surf.fill((255, 255, 255))
+        self.draw_pheromones(self.sim.world)
+        self.draw_ants(self.sim.ants)
         pygame.display.flip()
+        self._clock.tick(self.frame_rate)
 
     def on_cleanup(self):
         pygame.quit()
@@ -44,6 +54,9 @@ class App:
         self.on_cleanup()
 
     def draw_pheromones(self, world):
+        """
+        Draw pheromone trails as black circles, with opacity based on pheremone amount
+        """
         for y in range(256):
             for x in range(256):
                 v = world[y, x]
@@ -58,6 +71,9 @@ class App:
                     )
 
     def draw_ants(self, ants):
+        """
+        Draw ants as red circles
+        """
         for ant in ants:
             pygame.draw.circle(
                 self._display_surf,
