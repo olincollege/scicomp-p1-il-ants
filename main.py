@@ -98,39 +98,34 @@ class Ant:
 
 
 class App:
+    SCALE = 3
+
     def __init__(self, world, ants):
         self.world = world
         self.ants = ants
         self._running = True
         self._display_surf = None
-        self.scale = 3
-        self.width = self.height = 256 * self.scale
-        self.size = self.width, self.height
 
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode(
-            self.size, pygame.HWSURFACE | pygame.DOUBLEBUF
+            (256 * self.SCALE, 256 * self.SCALE), pygame.HWSURFACE | pygame.DOUBLEBUF
         )
+        self._display_surf.fill((255, 255, 255))
+
         self._running = True
 
-        self.surface = pygame.Surface((256, 256))
-        for y in range(256):
-            for x in range(256):
-                v = 255 - np.clip(self.world[y, x] * 10, 0, 255)
-                self.surface.set_at((x, y), (v, v, v))
+        # Draw pheromone trails as circles
+        self.draw_pheromones(self.world)
 
-        for ant in self.ants:
-            self.surface.set_at((ant.position[0], ant.position[1]), (255, 0, 0))
-
-        self.surface = pygame.transform.scale(self.surface, (self.width, self.height))
+        # Draw ants as red circles
+        self.draw_ants(self.ants)
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
 
     def on_loop(self):
-        self._display_surf.blit(self.surface, (0, 0))
         pygame.display.flip()
 
     def on_cleanup(self):
@@ -143,6 +138,29 @@ class App:
                 self.on_event(event)
             self.on_loop()
         self.on_cleanup()
+
+    def draw_pheromones(self, world):
+        for y in range(256):
+            for x in range(256):
+                v = world[y, x]
+                if v > 0:
+                    intensity = min(int(v * 10), 255)
+                    color = (255 - intensity, 255 - intensity, 255 - intensity)
+                    pygame.draw.circle(
+                        self._display_surf,
+                        color,
+                        (x * self.SCALE, y * self.SCALE),
+                        self.SCALE,
+                    )
+
+    def draw_ants(self, ants):
+        for ant in ants:
+            pygame.draw.circle(
+                self._display_surf,
+                (255, 0, 0),
+                (ant.position[0] * self.SCALE, ant.position[1] * self.SCALE),
+                self.SCALE + 1,
+            )
 
 
 class Direction:
