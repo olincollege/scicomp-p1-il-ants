@@ -3,7 +3,8 @@ from simulation import Simulation
 
 
 class App:
-    SCALE = 3
+    SCALE = 1080 / 256  # Fill full height
+    MIN_BLACK_VALUE = 60
 
     def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
         """
@@ -22,7 +23,7 @@ class App:
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode(
-            (256 * self.SCALE, 256 * self.SCALE), pygame.HWSURFACE | pygame.DOUBLEBUF
+            (1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF
         )
         self._display_surf.fill((255, 255, 255))
         self._clock = pygame.time.Clock()
@@ -39,6 +40,13 @@ class App:
         self._display_surf.fill((255, 255, 255))
         self.draw_pheromones(self.sim.world)
         self.draw_ants(self.sim.ants)
+        pygame.draw.line(
+            self._display_surf,
+            (self.MIN_BLACK_VALUE, self.MIN_BLACK_VALUE, self.MIN_BLACK_VALUE),
+            (1080, 0),
+            (1080, 1080),
+            3,
+        )
         pygame.display.flip()
         self._clock.tick(self.frame_rate)
 
@@ -61,12 +69,15 @@ class App:
             for x in range(256):
                 v = world[y, x]
                 if v > 0:
-                    intensity = min(int(v * 10), 255)
+                    intensity = min(int(v * 10), 255 - self.MIN_BLACK_VALUE)
                     color = (255 - intensity, 255 - intensity, 255 - intensity)
                     pygame.draw.circle(
                         self._display_surf,
                         color,
-                        (x * self.SCALE, y * self.SCALE),
+                        (
+                            x * self.SCALE,
+                            y * self.SCALE,
+                        ),
                         self.SCALE,
                     )
 
@@ -78,6 +89,9 @@ class App:
             pygame.draw.circle(
                 self._display_surf,
                 (200, 0, 0),
-                (ant.position[0] * self.SCALE, ant.position[1] * self.SCALE),
-                self.SCALE + 1,
+                (
+                    ant.position[0] * self.SCALE,
+                    ant.position[1] * self.SCALE,
+                ),
+                self.SCALE,
             )
