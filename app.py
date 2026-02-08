@@ -4,7 +4,9 @@ from simulation import Simulation
 
 class App:
     SCALE = 1080 / 256  # Fill full height
-    MIN_BLACK_VALUE = 60
+    TRAIL_VALUE = 60
+    TEXT_VALUE = 80
+    TEXT_BLACK = (TEXT_VALUE, TEXT_VALUE, TEXT_VALUE)
 
     def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
         """
@@ -36,46 +38,12 @@ class App:
         if event.type == pygame.QUIT:
             self._running = False
 
-        # Handle keypresses
-        elif event.type == pygame.KEYDOWN:
-            # Quit
-            if event.key == pygame.K_F8:
-                self._running = False
-            # Pause
-            if event.key == pygame.K_SPACE:
-                self.paused = not self.paused
-            # Step forward
-            elif event.key == pygame.K_RIGHT:
-                if not self.static:
-                    self.sim.step()
-            # Step backward
-            elif event.key == pygame.K_LEFT:
-                if not self.static:
-                    self.sim.step_backward()
-            # Reset
-            elif event.key == pygame.K_r:
-                self.sim.reset()
-                self.paused = False
+        self.handle_keypress(event)
 
     def on_loop(self):
         if not self.static and not self.paused:
             self.sim.step()
-        self._display_surf.fill((255, 255, 255))
-        self.draw_pheromones(self.sim.world)
-        self.draw_ants(self.sim.ants)
-        pygame.draw.line(
-            self._display_surf,
-            (self.MIN_BLACK_VALUE, self.MIN_BLACK_VALUE, self.MIN_BLACK_VALUE),
-            (1080, 0),
-            (1080, 1080),
-            3,
-        )
-
-        # Draw timestep
-        timestep_text = self._font.render(f"t = {self.sim.time_step}", True, (0, 0, 0))
-        self._display_surf.blit(timestep_text, (1100, 20))
-
-        pygame.display.flip()
+        self.draw_loop()
         self._clock.tick(self.frame_rate)
 
     def on_cleanup(self):
@@ -89,6 +57,51 @@ class App:
             self.on_loop()
         self.on_cleanup()
 
+    # region: Key Input
+
+    def handle_keypress(self, event):
+        if event.type != pygame.KEYDOWN:
+            return
+
+        if event.key == pygame.K_F8:
+            self._running = False
+        elif event.key == pygame.K_SPACE:
+            self.paused = not self.paused
+        elif event.key == pygame.K_RIGHT:
+            if not self.static:
+                self.sim.step()
+        elif event.key == pygame.K_LEFT:
+            if not self.static:
+                self.sim.step_backward()
+        elif event.key == pygame.K_r:
+            self.sim.reset()
+            self.paused = False
+
+    # region: Drawing
+
+    def draw_loop(self):
+        self._display_surf.fill((255, 255, 255))
+        self.draw_pheromones(self.sim.world)
+        self.draw_ants(self.sim.ants)
+        self.draw_control_panel()
+
+        pygame.display.flip()
+
+    def draw_control_panel(self):
+        pygame.draw.line(
+            self._display_surf,
+            self.TEXT_BLACK,
+            (1080, 0),
+            (1080, 1080),
+            3,
+        )
+
+        # Draw timestep
+        timestep_text = self._font.render(
+            f"t : {self.sim.time_step}", True, self.TEXT_BLACK
+        )
+        self._display_surf.blit(timestep_text, (1100, 20))
+
     def draw_pheromones(self, world):
         """
         Draw pheromone trails as black circles, with opacity based on pheremone amount
@@ -97,7 +110,7 @@ class App:
             for x in range(256):
                 v = world[y, x]
                 if v > 0:
-                    intensity = min(int(v * 10), 255 - self.MIN_BLACK_VALUE)
+                    intensity = min(int(v * 10), 255 - self.TRAIL_VALUE)
                     color = (255 - intensity, 255 - intensity, 255 - intensity)
                     pygame.draw.circle(
                         self._display_surf,
