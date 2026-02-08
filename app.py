@@ -1,4 +1,6 @@
 import pygame
+import numpy as np
+
 from simulation import Simulation
 
 
@@ -7,6 +9,7 @@ class App:
     TRAIL_VALUE = 60
     TEXT_VALUE = 80
     TEXT_BLACK = (TEXT_VALUE, TEXT_VALUE, TEXT_VALUE)
+    FONT_SIZE = 22
 
     def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
         """
@@ -30,7 +33,7 @@ class App:
         )
         self._display_surf.fill((255, 255, 255))
         self._clock = pygame.time.Clock()
-        self._font = pygame.font.SysFont("helvetica", 24, bold=True)
+        self._font = pygame.font.SysFont("helvetica", self.FONT_SIZE, bold=True)
 
         self._running = True
 
@@ -96,11 +99,23 @@ class App:
             3,
         )
 
+        LEFT_COL_X = 1120
+
         # Draw timestep
         timestep_text = self._font.render(
             f"t : {self.sim.time_step}", True, self.TEXT_BLACK
         )
-        self._display_surf.blit(timestep_text, (1100, 20))
+        self._display_surf.blit(timestep_text, (LEFT_COL_X, 40))
+
+        # Instructions
+        pause_text = self._font.render("pause : space", True, self.TEXT_BLACK)
+        step_text = self._font.render("step : ← →", True, self.TEXT_BLACK)
+        restart_text = self._font.render("restart : r", True, self.TEXT_BLACK)
+
+        y_pos = np.arange(3) * 30 + 100
+        self._display_surf.blit(pause_text, (LEFT_COL_X, y_pos[0]))
+        self._display_surf.blit(step_text, (LEFT_COL_X, y_pos[1]))
+        self._display_surf.blit(restart_text, (LEFT_COL_X, y_pos[2]))
 
     def draw_pheromones(self, world):
         """
