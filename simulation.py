@@ -35,15 +35,20 @@ class Simulation:
             )
         )
 
+        ants_to_remove = []
+
         # UPDATE
-        for ant in self.ants.copy():
+        for ant in self.ants:
             # DEPOSIT
             self.world[ant.position[1], ant.position[0]] += Ant.PHEROMONE_DEPOSITION
 
             # MOVE
             if not ant.move(self.world):
                 # remove if out of bounds
-                self.ants.remove(ant)
+                ants_to_remove.append(ant)
+
+        for ant in ants_to_remove:
+            self.ants.remove(ant)
 
         # EVAPORATE
         self.world = np.maximum(self.world - 1, 0)
