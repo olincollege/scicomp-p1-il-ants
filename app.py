@@ -44,6 +44,10 @@ class App:
             elif event.key == pygame.K_RIGHT:
                 if not self.static:
                     self.sim.step()
+            # Step backward
+            elif event.key == pygame.K_LEFT:
+                if not self.static:
+                    self.sim.step_backward()
             # Reset
             elif event.key == pygame.K_r:
                 self.sim.reset()
