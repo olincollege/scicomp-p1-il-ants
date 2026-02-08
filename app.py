@@ -52,6 +52,7 @@ class App:
             # Reset
             elif event.key == pygame.K_r:
                 self.sim.reset()
+                self.paused = False
 
     def on_loop(self):
         if not self.static and not self.paused:
