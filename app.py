@@ -77,7 +77,7 @@ class App:
         for ant in ants:
             pygame.draw.circle(
                 self._display_surf,
-                (255, 0, 0),
+                (200, 0, 0),
                 (ant.position[0] * self.SCALE, ant.position[1] * self.SCALE),
                 self.SCALE + 1,
             )
