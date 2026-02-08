@@ -38,6 +38,9 @@ class App:
 
         # Handle keypresses
         elif event.type == pygame.KEYDOWN:
+            # Quit
+            if event.key == pygame.K_F8:
+                self._running = False
             # Pause
             if event.key == pygame.K_SPACE:
                 self.paused = not self.paused
