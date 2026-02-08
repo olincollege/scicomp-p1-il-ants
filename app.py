@@ -28,6 +28,7 @@ class App:
         )
         self._display_surf.fill((255, 255, 255))
         self._clock = pygame.time.Clock()
+        self._font = pygame.font.SysFont("helvetica", 24, bold=True)
 
         self._running = True
 
@@ -65,6 +66,11 @@ class App:
             (1080, 1080),
             3,
         )
+
+        # Draw timestep
+        timestep_text = self._font.render(f"t = {self.sim.time_step}", True, (0, 0, 0))
+        self._display_surf.blit(timestep_text, (1100, 20))
+
         pygame.display.flip()
         self._clock.tick(self.frame_rate)
 
