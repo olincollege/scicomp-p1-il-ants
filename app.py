@@ -19,6 +19,7 @@ class App:
         self._running = True
         self._display_surf = None
         self._clock = None
+        self.paused = False
 
     def on_init(self):
         pygame.init()
@@ -34,8 +35,21 @@ class App:
         if event.type == pygame.QUIT:
             self._running = False
 
+        # Handle keypresses
+        elif event.type == pygame.KEYDOWN:
+            # Pause
+            if event.key == pygame.K_SPACE:
+                self.paused = not self.paused
+            # Step forward
+            elif event.key == pygame.K_RIGHT:
+                if not self.static:
+                    self.sim.step()
+            # Reset
+            elif event.key == pygame.K_r:
+                self.sim.reset()
+
     def on_loop(self):
-        if not self.static:
+        if not self.static and not self.paused:
             self.sim.step()
         self._display_surf.fill((255, 255, 255))
         self.draw_pheromones(self.sim.world)

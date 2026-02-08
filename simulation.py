@@ -25,6 +25,14 @@ class Simulation:
         if seed is not None:
             np.random.seed(seed)
             random.seed(seed)
+        self.seed = seed
+
+    def reset(self):
+        self.world = np.zeros((256, 256))
+        self.ants = []
+        if self.seed is not None:
+            np.random.seed(self.seed)
+            random.seed(self.seed)
 
     def step(self):
         # SPAWN
