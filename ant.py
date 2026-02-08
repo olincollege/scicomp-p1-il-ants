@@ -107,11 +107,13 @@ class Direction:
 
     ALL = [UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT]
 
+    # Precompute rotation map
+    INDEX_MAP = {tuple(d): i for i, d in enumerate(ALL)}
+
     @staticmethod
     def rotate(direction: np.ndarray, steps: int) -> np.ndarray:
         """
         Rotates by 45 degrees * steps
         """
-        for idx, d in enumerate(Direction.ALL):
-            if np.array_equal(d, direction):
-                return Direction.ALL[(idx + steps) % 8]
+        idx = Direction.INDEX_MAP[tuple(direction)]
+        return Direction.ALL[(idx + steps) % 8]
