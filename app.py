@@ -16,7 +16,6 @@ class App:
 
     FONT_SIZE = 22
     KEY_HOLD_DELAY = 300  # milliseconds
-    CONSTANT_STEP = 1  # How much to change constant values
 
     def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
         """
@@ -46,7 +45,6 @@ class App:
         }
 
         # Constants editing
-        # self.modified_constants = replace(sim.constants)  # copies
         self.user_constants = {
             "seed": sim.seed,
             "fidelity min": sim.constants.fidelity_min,
@@ -98,7 +96,6 @@ class App:
         self.handle_keypress(event)
 
     def on_loop(self):
-        # Check held keys for continuous stepping (only after hold delay)
         if not self.paused:
             self.sim.step()
 
@@ -149,10 +146,10 @@ class App:
             # Modify constants
             elif event.key == pygame.K_a:
                 self.active_preset_key = None
-                self.modify_constant(-self.CONSTANT_STEP)
+                self.modify_constant(-1)
             elif event.key == pygame.K_d:
                 self.active_preset_key = None
-                self.modify_constant(self.CONSTANT_STEP)
+                self.modify_constant(1)
             # Apply presets
             elif event.key in self.preset_keys:
                 self.active_preset_key = event.key
@@ -183,8 +180,8 @@ class App:
         key_actions = {
             pygame.K_RIGHT: self.sim.step,
             pygame.K_LEFT: self.sim.step_backward,
-            pygame.K_a: lambda: self.modify_constant(-self.CONSTANT_STEP),
-            pygame.K_d: lambda: self.modify_constant(self.CONSTANT_STEP),
+            pygame.K_a: lambda: self.modify_constant(-1),
+            pygame.K_d: lambda: self.modify_constant(1),
         }
 
         for key, action in key_actions.items():
@@ -207,9 +204,12 @@ class App:
         for i in range(5):
             self.user_constants[f"B{i}"] = preset.turning_kernel[i]
 
-    def modify_constant(self, delta):
+    def modify_constant(self, polarity: int):
         """
         Modify the selected constant by the given delta
+
+        Args:
+            polarity (int): +1 or -1, direction to change the constant
         """
         constant_name = self.constant_order[self.selected_constant_idx]
         current_value = self.user_constants[constant_name]
@@ -229,7 +229,7 @@ class App:
             step = 0.01
             clamp = (0.0, 1.0)
 
-        new_value = current_value + (delta * step)
+        new_value = current_value + (polarity * step)
         new_value = np.clip(new_value, *clamp)
 
         self.user_constants[constant_name] = new_value
@@ -358,6 +358,13 @@ class App:
                     RIGHT_COL_X + 25,
                     100 + (i + 1.5) * 30,
                 )  # Leave space after other constants
+
+            # Show indicator for selected constant
+            if is_selected:
+                indicator_left = self._font.render("-", True, color)
+                indicator_right = self._font.render("-", True, color)
+                self._display_surf.blit(indicator_left, (RIGHT_COL_X - 35, pos[1]))
+                self._display_surf.blit(indicator_right, (RIGHT_COL_X + 300, pos[1]))
 
             const_text = self._font.render(f"{name} : {value_text}", True, color)
             self._display_surf.blit(const_text, pos)
