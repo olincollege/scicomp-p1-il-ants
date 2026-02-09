@@ -1,14 +1,35 @@
+"""
+Class for storing simulation constants, and presets matching each figure in the paper
+"""
+
 import numpy as np
 from dataclasses import dataclass
 
 
 @dataclass
 class SimulationConstants:
+    """
+    Dataclass for storing simulation constants.
+
+    Attributes:
+        fidelity_min (float): Minimum fidelity value, representing chance out
+            of 256 to lose trail at 0 pheromone level
+        fidelity_delta (float): Delta added to fidelity_min at saturation
+            pheromone level
+        pheromone_deposition (float): Amount of pheromone deposited by an ant
+            each step
+        pheromone_saturation (float): Pheromone level at which fidelity
+            reaches maximum
+        turning_kernel (np.ndarray): Length 5 array representing weighted
+            random turn kernel, where each element represents probability to
+            turn in 45 degree increments
+    """
+
     fidelity_min: float  # phi_low
     fidelity_delta: float  # delta phi
     pheromone_deposition: float  # tau
     pheromone_saturation: float  # C_s
-    turning_kernel: np.ndarray
+    turning_kernel: np.ndarray  # B
 
 
 DEFAULT_KERNEL = np.array([0.581, 0.36, 0.047, 0.008, 0.004])

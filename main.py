@@ -1,3 +1,7 @@
+"""
+Main entry point for the ant simulation application.
+"""
+
 from simulation import Simulation
 from app import App
 import constants

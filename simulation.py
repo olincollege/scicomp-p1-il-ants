@@ -1,3 +1,7 @@
+"""
+Class to perform main ant simulation logic
+"""
+
 import numpy as np
 import random
 from dataclasses import dataclass
@@ -8,11 +12,24 @@ from constants import SimulationConstants
 
 @dataclass
 class State:
+    """
+    Dataclass to store simulation state at a given time step
+    """
+
     world: np.ndarray
     ants: list[Ant]
 
 
 class Simulation:
+    """
+    Performs main ant simulation logic, with methods to step forward and
+    backward in time. Stores world state each step allowing for going back
+    and forth between timesteps.
+
+    Simulation is a 256x256 grid, with a spawn point in the center. Spawned ants
+    begin with a random diagonal heading.
+    """
+
     WORLD_SIZE = (256, 256)
     SPAWN_POINT = np.array([128, 128])
     SPAWN_DIRECTIONS = [
@@ -30,6 +47,13 @@ class Simulation:
         self.reset(constants, seed)
 
     def reset(self, constants: SimulationConstants, seed: int):
+        """
+        Resets the simulation to initial state, applying new constants and seed.
+
+        Args:
+            constants (SimulationConstants): Constants to apply to the simulation
+            seed (int): Random seed to use for the simulation
+        """
         self.constants = constants
         self.seed = seed
 
@@ -42,49 +66,16 @@ class Simulation:
         self.cache_state()
         self.time_step = 0
 
-    def cache_state(self):
-        """
-        Caches current state as a State object
-        """
-        self.state_history.append(
-            State(
-                world=self.world.copy(),
-                ants=[
-                    Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
-                    for ant in self.ants
-                ],
-            )
-        )
-
-    def load_state(self, time_step) -> bool:
-        """
-        Loads cached state at given time step. If time step is out of bounds, does nothing.
-
-        Returns:
-            bool: If state was loaded
-        """
-        if time_step < 0 or time_step >= len(self.state_history):
-            return False
-
-        self.time_step = time_step
-        state = self.state_history[time_step]
-        self.world = state.world.copy()
-        self.ants = [
-            Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
-            for ant in state.ants
-        ]
-        return True
-
-    def step_backward(self):
-        """
-        Rollback simulation by one time step
-        """
-        self.load_state(self.time_step - 1)
-
     def step(self):
         """
         Advance simulation forward by one time step, attemps to load from
-        cached states before simulating new state
+        cached states before simulating new state.
+
+        Each step:
+        1. Spawn new ant at center with random diagonal heading
+        2. Each ant deposits pheromone, then moves according to trail following algorithm
+        3. Remove ants that move out of bounds
+        4. Evaporate pheromones everywhere by 1 unit
         """
         # try to load cached state
         if self.load_state(self.time_step + 1):
@@ -122,3 +113,45 @@ class Simulation:
         # CACHE STATE
         self.cache_state()
         self.time_step += 1
+
+    def step_backward(self):
+        """
+        Rollback simulation by one time step, loading from cached states.
+        """
+        self.load_state(self.time_step - 1)
+
+    def cache_state(self):
+        """
+        Caches current state as a State object
+        """
+        self.state_history.append(
+            State(
+                world=self.world.copy(),
+                ants=[
+                    Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
+                    for ant in self.ants
+                ],
+            )
+        )
+
+    def load_state(self, time_step: int) -> bool:
+        """
+        Loads cached state at given time step. If time step is out of bounds, does nothing.
+
+        Args:
+            time_step (int): Time step to load
+
+        Returns:
+            bool: If state was loaded
+        """
+        if time_step < 0 or time_step >= len(self.state_history):
+            return False
+
+        self.time_step = time_step
+        state = self.state_history[time_step]
+        self.world = state.world.copy()
+        self.ants = [
+            Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
+            for ant in state.ants
+        ]
+        return True
