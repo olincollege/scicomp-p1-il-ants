@@ -4,6 +4,7 @@ PyGame application for running and displaying ant simulation
 
 import pygame
 import numpy as np
+import asyncio
 
 from ant import Ant
 from simulation import Simulation
@@ -176,7 +177,7 @@ class App:
         """
         pygame.quit()
 
-    def on_execute(self):
+    async def on_execute(self):
         """
         Main application loop
         """
@@ -185,6 +186,7 @@ class App:
             for event in pygame.event.get():
                 self.on_event(event)
             self.on_loop()
+            await asyncio.sleep(0)
         self.on_cleanup()
 
     # region: Key Input

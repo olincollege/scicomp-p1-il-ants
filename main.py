@@ -1,14 +1,22 @@
+# /// script
+# dependencies = ["numpy"]
+# ///
+
 """
 Main entry point for the ant simulation application.
 """
+
+import asyncio
 
 from simulation import Simulation
 from app import App
 import constants
 
-TIME_STEPS = 500
 
-if __name__ == "__main__":
+async def main():
     s = Simulation(constants=constants.FIG_3C, seed=42)
     app = App(s)
-    app.on_execute()
+    await app.on_execute()
+
+
+asyncio.run(main())
