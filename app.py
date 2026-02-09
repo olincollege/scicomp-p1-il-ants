@@ -16,6 +16,25 @@ class App:
     # Input
     KEY_HOLD_DELAY = 300  # milliseconds
 
+    # Frame rate options
+    SPEED_OPTIONS = [7, 15, 30, 60, 90]
+    SPEED_LABELS = ["0.25x", "0.5x", "1x", "2x", "3x"]
+
+    # Sim constant presets
+    PRESET_KEYS = {
+        pygame.K_1: constants.FIG_3A,
+        pygame.K_2: constants.FIG_3B,
+        pygame.K_3: constants.FIG_3C,
+        pygame.K_4: constants.FIG_4A,
+        pygame.K_5: constants.FIG_4B,
+        pygame.K_6: constants.FIG_4C,
+        pygame.K_7: constants.FIG_5A,
+        pygame.K_8: constants.FIG_5B,
+        pygame.K_9: constants.FIG_5C,
+        pygame.K_0: constants.FIG_6A,
+        pygame.K_MINUS: constants.FIG_6B,
+    }
+
     # Colors
     BG_COLOR = (255, 255, 255)
     TRAIL_VALUE = 60
@@ -57,17 +76,18 @@ class App:
             sim (Simulation): Simulation object to visualize
         """
         self.sim = sim
-        self._running = True
-        self._display_surf = None
-        self._clock = None
+
+        # PyGame state
+        self.running = True
+        self.display_surf: pygame.Surface = None
+        self.clock: pygame.time.Clock = None
         self.paused = False
 
-        # Speed control
+        # Frame rate control
         self.frame_rate = 30
         self.speed_idx = 2
-        self.speed_options = [7, 15, 30, 60, 90]
-        self.speed_labels = ["0.25x", "0.5x", "1x", "2x", "3x"]
 
+        # Track key holding state
         self.key_hold_time = {
             pygame.K_RIGHT: 0,
             pygame.K_LEFT: 0,
@@ -96,40 +116,27 @@ class App:
         }
         self.constant_order = list(self.user_constants.keys())
         self.selected_constant_idx = 0
-        self.active_preset_key = None  # Track which preset is currently active
 
-        # Preset mappings
-        self.preset_keys = {
-            pygame.K_1: constants.FIG_3A,
-            pygame.K_2: constants.FIG_3B,
-            pygame.K_3: constants.FIG_3C,
-            pygame.K_4: constants.FIG_4A,
-            pygame.K_5: constants.FIG_4B,
-            pygame.K_6: constants.FIG_4C,
-            pygame.K_7: constants.FIG_5A,
-            pygame.K_8: constants.FIG_5B,
-            pygame.K_9: constants.FIG_5C,
-            pygame.K_0: constants.FIG_6A,
-            pygame.K_MINUS: constants.FIG_6B,
-        }
+        # Track active sim constant preset
+        self.active_preset_key: int = None
 
     # region: PyGame Core
 
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode(
+        self.display_surf = pygame.display.set_mode(
             (self.WINDOW_WIDTH, self.WINDOW_HEIGHT),
             pygame.HWSURFACE | pygame.DOUBLEBUF,
         )
-        self._display_surf.fill(self.BG_COLOR)
-        self._clock = pygame.time.Clock()
+        self.display_surf.fill(self.BG_COLOR)
+        self.clock = pygame.time.Clock()
         self._font = pygame.font.SysFont("helvetica", self.FONT_SIZE, bold=True)
 
-        self._running = True
+        self.running = True
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
-            self._running = False
+            self.running = False
 
         self.handle_keypress(event)
 
@@ -140,14 +147,14 @@ class App:
         self.handle_key_held()
 
         self.draw_loop()
-        self._clock.tick(self.frame_rate)
+        self.clock.tick(self.frame_rate)
 
     def on_cleanup(self):
         pygame.quit()
 
     def on_execute(self):
         self.on_init()
-        while self._running:
+        while self.running:
             for event in pygame.event.get():
                 self.on_event(event)
             self.on_loop()
@@ -159,7 +166,7 @@ class App:
         if event.type == pygame.KEYDOWN:
             # Quit
             if event.key == pygame.K_F8:
-                self._running = False
+                self.running = False
             # Pause
             elif event.key == pygame.K_SPACE:
                 self.paused = not self.paused
@@ -189,16 +196,16 @@ class App:
                 self.active_preset_key = None
                 self.modify_constant(1)
             # Apply presets
-            elif event.key in self.preset_keys:
+            elif event.key in self.PRESET_KEYS:
                 self.active_preset_key = event.key
-                self.apply_preset(self.preset_keys[event.key])
+                self.apply_preset(self.PRESET_KEYS[event.key])
             # Speed control
             elif event.key == pygame.K_q:
                 self.speed_idx = max(0, self.speed_idx - 1)
-                self.frame_rate = self.speed_options[self.speed_idx]
+                self.frame_rate = self.SPEED_OPTIONS[self.speed_idx]
             elif event.key == pygame.K_e:
-                self.speed_idx = min(len(self.speed_options) - 1, self.speed_idx + 1)
-                self.frame_rate = self.speed_options[self.speed_idx]
+                self.speed_idx = min(len(self.SPEED_OPTIONS) - 1, self.speed_idx + 1)
+                self.frame_rate = self.SPEED_OPTIONS[self.speed_idx]
 
             # Record keypress time to track hold length
             if event.key in [pygame.K_RIGHT, pygame.K_LEFT, pygame.K_a, pygame.K_d]:
@@ -297,7 +304,7 @@ class App:
     # region: Drawing
 
     def draw_loop(self):
-        self._display_surf.fill(self.BG_COLOR)
+        self.display_surf.fill(self.BG_COLOR)
         self.draw_pheromones(self.sim.world)
         self.draw_ants(self.sim.ants)
         self.draw_control_panel()
@@ -320,7 +327,7 @@ class App:
         Draw vertical line separating simulation and control panel
         """
         pygame.draw.line(
-            self._display_surf,
+            self.display_surf,
             self.TEXT_BLACK,
             (self.PANEL_X, 0),
             (self.PANEL_X, self.WINDOW_HEIGHT),
@@ -335,15 +342,15 @@ class App:
         timestep_text = self._font.render(
             f"t : {self.sim.time_step}", True, self.TEXT_BLACK
         )
-        self._display_surf.blit(timestep_text, (self.LEFT_COL_X, self.TIMESTEP_Y))
+        self.display_surf.blit(timestep_text, (self.LEFT_COL_X, self.TIMESTEP_Y))
 
         # Draw speed
         speed_text = self._font.render(
-            f"sim speed : {self.speed_labels[self.speed_idx]}",
+            f"sim speed : {self.SPEED_LABELS[self.speed_idx]}",
             True,
             self.TEXT_BLACK,
         )
-        self._display_surf.blit(speed_text, (self.LEFT_COL_X, self.SPEED_Y))
+        self.display_surf.blit(speed_text, (self.LEFT_COL_X, self.SPEED_Y))
 
     def draw_instructions(self):
         """
@@ -357,10 +364,10 @@ class App:
         )
 
         y_pos = np.arange(4) * self.LINE_HEIGHT + self.INSTRUCTIONS_Y
-        self._display_surf.blit(pause_text, (self.LEFT_COL_X, y_pos[0]))
-        self._display_surf.blit(step_text, (self.LEFT_COL_X, y_pos[1]))
-        self._display_surf.blit(speed_text, (self.LEFT_COL_X, y_pos[2]))
-        self._display_surf.blit(restart_text, (self.LEFT_COL_X, y_pos[3]))
+        self.display_surf.blit(pause_text, (self.LEFT_COL_X, y_pos[0]))
+        self.display_surf.blit(step_text, (self.LEFT_COL_X, y_pos[1]))
+        self.display_surf.blit(speed_text, (self.LEFT_COL_X, y_pos[2]))
+        self.display_surf.blit(restart_text, (self.LEFT_COL_X, y_pos[3]))
 
     def draw_constant_presets(self):
         """
@@ -368,7 +375,7 @@ class App:
         """
         # Preset keybinds
         preset_title = self._font.render("constant presets :", True, self.TEXT_BLACK)
-        self._display_surf.blit(preset_title, (self.LEFT_COL_X, self.PRESETS_TITLE_Y))
+        self.display_surf.blit(preset_title, (self.LEFT_COL_X, self.PRESETS_TITLE_Y))
 
         presets_info = [
             "3A : [1]",
@@ -406,7 +413,7 @@ class App:
             )
             preset_label = self._font.render(preset_text, True, color)
             y = self.PRESETS_START_Y + idx * self.LINE_HEIGHT
-            self._display_surf.blit(
+            self.display_surf.blit(
                 preset_label, (self.LEFT_COL_X + self.INDENT_WIDTH, y)
             )
 
@@ -417,7 +424,7 @@ class App:
 
         # Constants section
         const_title = self._font.render("constants : [wasd]", True, self.TEXT_BLACK)
-        self._display_surf.blit(const_title, (self.RIGHT_COL_X, self.CONSTANTS_TITLE_Y))
+        self.display_surf.blit(const_title, (self.RIGHT_COL_X, self.CONSTANTS_TITLE_Y))
 
         # Draw each constant
         for i, name in enumerate(self.constant_order):
@@ -439,22 +446,22 @@ class App:
             if is_selected:
                 indicator_left = self._font.render("-", True, color)
                 indicator_right = self._font.render("-", True, color)
-                self._display_surf.blit(
+                self.display_surf.blit(
                     indicator_left,
                     (self.RIGHT_COL_X + self.INDICATOR_LEFT_OFFSET, pos[1]),
                 )
-                self._display_surf.blit(
+                self.display_surf.blit(
                     indicator_right,
                     (self.RIGHT_COL_X + self.INDICATOR_RIGHT_OFFSET, pos[1]),
                 )
 
             const_text = self._font.render(f"{name} : {value_text}", True, color)
-            self._display_surf.blit(const_text, pos)
+            self.display_surf.blit(const_text, pos)
 
         # Draw kernel label
         kernel_label = self._font.render("turning kernel :", True, self.TEXT_BLACK)
         kernel_y = self.CONSTANTS_START_Y + self.KERNEL_LABEL_ROW * self.LINE_HEIGHT
-        self._display_surf.blit(kernel_label, (self.RIGHT_COL_X, kernel_y))
+        self.display_surf.blit(kernel_label, (self.RIGHT_COL_X, kernel_y))
 
     def draw_pheromones(self, world):
         """
@@ -470,7 +477,7 @@ class App:
                     )
                     color = (255 - intensity,) * 3
                     pygame.draw.circle(
-                        self._display_surf,
+                        self.display_surf,
                         color,
                         (x * self.SCALE, y * self.SCALE),
                         self.SCALE,
@@ -482,7 +489,7 @@ class App:
         """
         for ant in ants:
             pygame.draw.circle(
-                self._display_surf,
+                self.display_surf,
                 self.ANT_COLOR,
                 (ant.position[0] * self.SCALE, ant.position[1] * self.SCALE),
                 self.SCALE,
