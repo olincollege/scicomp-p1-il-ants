@@ -51,14 +51,12 @@ class App:
     INDICATOR_LEFT_OFFSET = -35
     INDICATOR_RIGHT_OFFSET = 300
 
-    def __init__(self, sim: Simulation, static: bool):
+    def __init__(self, sim: Simulation):
         """
         Args:
             sim (Simulation): Simulation object to visualize
-            static (bool): Whether to run simulation or just visualize final state
         """
         self.sim = sim
-        self.static = static
         self._running = True
         self._display_surf = None
         self._clock = None
@@ -203,10 +201,7 @@ class App:
                 self.frame_rate = self.speed_options[self.speed_idx]
 
             # Record keypress time to track hold length
-            if (
-                event.key in [pygame.K_RIGHT, pygame.K_LEFT, pygame.K_a, pygame.K_d]
-                and not self.static
-            ):
+            if event.key in [pygame.K_RIGHT, pygame.K_LEFT, pygame.K_a, pygame.K_d]:
                 if not self.key_held[event.key]:
                     self.key_hold_time[event.key] = pygame.time.get_ticks()
                     self.key_held[event.key] = True
@@ -217,9 +212,6 @@ class App:
                 self.key_held[event.key] = False
 
     def handle_key_held(self):
-        if self.static:
-            return
-
         current_time = pygame.time.get_ticks()
         keys = pygame.key.get_pressed()
 
