@@ -7,10 +7,12 @@ from constants import SimulationConstants
 
 class App:
     SCALE = 1080 / 256  # Fill full height
+
+    # Black values
     TRAIL_VALUE = 60
-    TEXT_VALUE = 120
-    TEXT_BLACK = (TEXT_VALUE, TEXT_VALUE, TEXT_VALUE)
-    TEXT_SELECTED = (30, 30, 30)
+    TEXT_BLACK = (120,) * 3
+    SELECTED_BLACK = (30,) * 3
+
     FONT_SIZE = 22
     KEY_HOLD_DELAY = 300  # milliseconds
     CONSTANT_STEP = 1  # How much to change constant values
@@ -265,15 +267,26 @@ class App:
         for i, name in enumerate(self.constant_order):
             value = self.user_constants[name]
             is_selected = i == self.selected_constant_idx
-            color = self.TEXT_SELECTED if is_selected else self.TEXT_BLACK
+            color = self.SELECTED_BLACK if is_selected else self.TEXT_BLACK
 
-            # Format the name nicely
-            if name.startswith("B"):
-                value_text = f"{value:.2f}"
-            else:
+            if not name.startswith("B"):
+                # Default formatting
                 value_text = f"{int(value)}"
+                pos = (RIGHT_COL_X, 100 + i * 30)
+            else:
+                # Kernel val formatting
+                value_text = f"{value:.2f}"
+                pos = (
+                    RIGHT_COL_X + 25,
+                    100 + (i + 1.5) * 30,
+                )  # Leave space after other constants
+
             const_text = self._font.render(f"{name} : {value_text}", True, color)
-            self._display_surf.blit(const_text, (RIGHT_COL_X, 100 + i * 30))
+            self._display_surf.blit(const_text, pos)
+
+        # Draw kernel label
+        kernel_label = self._font.render("turning kernel :", True, self.TEXT_BLACK)
+        self._display_surf.blit(kernel_label, (RIGHT_COL_X, 100 + 5.5 * 30))
 
     def draw_pheromones(self, world):
         """
