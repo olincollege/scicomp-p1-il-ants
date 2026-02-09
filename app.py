@@ -10,6 +10,7 @@ class App:
     TEXT_VALUE = 80
     TEXT_BLACK = (TEXT_VALUE, TEXT_VALUE, TEXT_VALUE)
     FONT_SIZE = 22
+    KEY_HOLD_DELAY = 300  # milliseconds
 
     def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
         """
@@ -25,6 +26,8 @@ class App:
         self._display_surf = None
         self._clock = None
         self.paused = False
+        self.key_hold_time = {pygame.K_RIGHT: 0, pygame.K_LEFT: 0}
+        self.key_held = {pygame.K_RIGHT: False, pygame.K_LEFT: False}
 
     def on_init(self):
         pygame.init()
@@ -44,8 +47,12 @@ class App:
         self.handle_keypress(event)
 
     def on_loop(self):
-        if not self.static and not self.paused:
+        # Check held keys for continuous stepping (only after hold delay)
+        if not self.paused:
             self.sim.step()
+        else:
+            self.handle_key_held()
+
         self.draw_loop()
         self._clock.tick(self.frame_rate)
 
@@ -63,22 +70,43 @@ class App:
     # region: Key Input
 
     def handle_keypress(self, event):
-        if event.type != pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F8:
+                self._running = False
+            elif event.key == pygame.K_SPACE:
+                self.paused = not self.paused
+            elif event.key == pygame.K_r:
+                self.sim.reset()
+                self.paused = False
+            elif event.key == pygame.K_RIGHT:
+                self.sim.step()
+            elif event.key == pygame.K_LEFT:
+                self.sim.step_backward()
+
+            # Record keypress time to track hold length
+            if event.key in [pygame.K_RIGHT, pygame.K_LEFT] and not self.static:
+                if not self.key_held[event.key]:
+                    self.key_hold_time[event.key] = pygame.time.get_ticks()
+                    self.key_held[event.key] = True
+
+        # Check for key releases to stop hold tracking
+        elif event.type == pygame.KEYUP:
+            if event.key in [pygame.K_RIGHT, pygame.K_LEFT]:
+                self.key_held[event.key] = False
+
+    def handle_key_held(self):
+        if self.static:
             return
 
-        if event.key == pygame.K_F8:
-            self._running = False
-        elif event.key == pygame.K_SPACE:
-            self.paused = not self.paused
-        elif event.key == pygame.K_RIGHT:
-            if not self.static:
+        current_time = pygame.time.get_ticks()
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_RIGHT]:
+            if current_time - self.key_hold_time[pygame.K_RIGHT] > self.KEY_HOLD_DELAY:
                 self.sim.step()
-        elif event.key == pygame.K_LEFT:
-            if not self.static:
+        elif keys[pygame.K_LEFT]:
+            if current_time - self.key_hold_time[pygame.K_LEFT] > self.KEY_HOLD_DELAY:
                 self.sim.step_backward()
-        elif event.key == pygame.K_r:
-            self.sim.reset()
-            self.paused = False
 
     # region: Drawing
 
