@@ -13,6 +13,8 @@ class State:
 
 
 class Simulation:
+    WORLD_SIZE = (256, 256)
+    SPAWN_POINT = np.array([128, 128])
     SPAWN_DIRECTIONS = [
         Direction.UP_RIGHT,
         Direction.DOWN_RIGHT,
@@ -23,31 +25,20 @@ class Simulation:
     def __init__(
         self,
         constants: SimulationConstants,
-        world_size=(256, 256),
-        spawn_point=(128, 128),
-        seed=None,
+        seed: int,
     ):
+        self.reset(constants, seed)
+
+    def reset(self, constants: SimulationConstants, seed: int):
         self.constants = constants
-        self.world: np.ndarray = np.zeros(world_size)
-        self.ants: list[Ant] = []
-        self.spawn_point: np.ndarray = np.array(spawn_point)
         self.seed = seed
 
-        if seed is not None:
-            np.random.seed(seed)
-            random.seed(seed)
-
-        self.state_history: list[State] = []
-        self.cache_state()
-        self.time_step = 0
-
-    def reset(self):
-        self.world: np.ndarray = np.zeros((256, 256))
+        self.world: np.ndarray = np.zeros(self.WORLD_SIZE)
         self.ants: list[Ant] = []
         self.state_history: list[State] = []
-        if self.seed is not None:
-            np.random.seed(self.seed)
-            random.seed(self.seed)
+
+        np.random.seed(self.seed)
+        random.seed(self.seed)
         self.cache_state()
         self.time_step = 0
 
@@ -102,7 +93,7 @@ class Simulation:
         # SPAWN
         self.ants.append(
             Ant(
-                self.spawn_point.copy(),
+                self.SPAWN_POINT.copy(),
                 random.choice(self.SPAWN_DIRECTIONS),
                 self.constants,
             )

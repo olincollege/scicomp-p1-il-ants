@@ -81,9 +81,11 @@ class Ant:
         """
         Returns new heading
         """
-        steps = np.random.choice(
-            len(self.constants.turning_kernel), p=self.constants.turning_kernel
+        kernel_normalized = self.constants.turning_kernel / np.sum(
+            self.constants.turning_kernel
         )
+        # Hardcoded 5, 0-4 are possible outputs
+        steps = np.random.choice(5, p=kernel_normalized)
         dir = random.choice([-1, 1])
         return Direction.rotate(self.heading, dir * steps)
 
