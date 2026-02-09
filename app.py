@@ -7,19 +7,49 @@ import constants
 
 
 class App:
-    SCALE = 1080 / 256  # Fill full height
+    # Window
+    WINDOW_WIDTH = 1920
+    WINDOW_HEIGHT = 1080
+    WORLD_SIZE = 256
+    SCALE = WINDOW_HEIGHT / WORLD_SIZE
 
-    # Black values
+    # Input
+    KEY_HOLD_DELAY = 300  # milliseconds
+
+    # Colors
+    BG_COLOR = (255, 255, 255)
     TRAIL_VALUE = 60
     TEXT_BLACK = (120,) * 3
     SELECTED_BLACK = (30,) * 3
+    ANT_COLOR = (200, 0, 0)
 
+    # Text
     FONT_SIZE = 22
-    KEY_HOLD_DELAY = 300  # milliseconds
+    LINE_HEIGHT = 30
+    INDENT_WIDTH = 25
 
-    # Layout constants
-    LEFT_COL_X = 1120
-    RIGHT_COL_X = 1520
+    # Pheromone rendering
+    PHEROMONE_INTENSITY_SCALE = 8
+
+    # Layout Constants
+    PANEL_X = WINDOW_HEIGHT
+    PANEL_DIVIDER_WIDTH = 3
+    LEFT_COL_X = PANEL_X + 40
+    RIGHT_COL_X = PANEL_X + 440
+
+    TIMESTEP_Y = 40
+    SPEED_Y = 70
+    INSTRUCTIONS_Y = 130
+    PRESETS_TITLE_Y = 280
+    PRESETS_START_Y = 310
+    CONSTANTS_TITLE_Y = 40
+    CONSTANTS_START_Y = 100
+
+    KERNEL_LABEL_ROW = 5.5
+    KERNEL_VALUE_GAP = 1.5
+
+    INDICATOR_LEFT_OFFSET = -35
+    INDICATOR_RIGHT_OFFSET = 300
 
     def __init__(self, sim: Simulation, static: bool):
         """
@@ -90,9 +120,10 @@ class App:
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode(
-            (1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF
+            (self.WINDOW_WIDTH, self.WINDOW_HEIGHT),
+            pygame.HWSURFACE | pygame.DOUBLEBUF,
         )
-        self._display_surf.fill((255, 255, 255))
+        self._display_surf.fill(self.BG_COLOR)
         self._clock = pygame.time.Clock()
         self._font = pygame.font.SysFont("helvetica", self.FONT_SIZE, bold=True)
 
@@ -274,7 +305,7 @@ class App:
     # region: Drawing
 
     def draw_loop(self):
-        self._display_surf.fill((255, 255, 255))
+        self._display_surf.fill(self.BG_COLOR)
         self.draw_pheromones(self.sim.world)
         self.draw_ants(self.sim.ants)
         self.draw_control_panel()
@@ -299,9 +330,9 @@ class App:
         pygame.draw.line(
             self._display_surf,
             self.TEXT_BLACK,
-            (1080, 0),
-            (1080, 1080),
-            3,
+            (self.PANEL_X, 0),
+            (self.PANEL_X, self.WINDOW_HEIGHT),
+            self.PANEL_DIVIDER_WIDTH,
         )
 
     def draw_time_and_speed(self):
@@ -312,7 +343,7 @@ class App:
         timestep_text = self._font.render(
             f"t : {self.sim.time_step}", True, self.TEXT_BLACK
         )
-        self._display_surf.blit(timestep_text, (self.LEFT_COL_X, 40))
+        self._display_surf.blit(timestep_text, (self.LEFT_COL_X, self.TIMESTEP_Y))
 
         # Draw speed
         speed_text = self._font.render(
@@ -320,7 +351,7 @@ class App:
             True,
             self.TEXT_BLACK,
         )
-        self._display_surf.blit(speed_text, (self.LEFT_COL_X, 70))
+        self._display_surf.blit(speed_text, (self.LEFT_COL_X, self.SPEED_Y))
 
     def draw_instructions(self):
         """
@@ -333,7 +364,7 @@ class App:
             "restart with new constants : [r]", True, self.TEXT_BLACK
         )
 
-        y_pos = np.arange(4) * 30 + 130
+        y_pos = np.arange(4) * self.LINE_HEIGHT + self.INSTRUCTIONS_Y
         self._display_surf.blit(pause_text, (self.LEFT_COL_X, y_pos[0]))
         self._display_surf.blit(step_text, (self.LEFT_COL_X, y_pos[1]))
         self._display_surf.blit(speed_text, (self.LEFT_COL_X, y_pos[2]))
@@ -345,7 +376,7 @@ class App:
         """
         # Preset keybinds
         preset_title = self._font.render("constant presets :", True, self.TEXT_BLACK)
-        self._display_surf.blit(preset_title, (self.LEFT_COL_X, 280))
+        self._display_surf.blit(preset_title, (self.LEFT_COL_X, self.PRESETS_TITLE_Y))
 
         presets_info = [
             "3A : [1]",
@@ -361,7 +392,6 @@ class App:
             "6B : [-]",
         ]
 
-        y_start = 310
         for idx, preset_text in enumerate(presets_info):
             # Highlight the active preset
             preset_key = [
@@ -383,8 +413,9 @@ class App:
                 else self.TEXT_BLACK
             )
             preset_label = self._font.render(preset_text, True, color)
+            y = self.PRESETS_START_Y + idx * self.LINE_HEIGHT
             self._display_surf.blit(
-                preset_label, (self.LEFT_COL_X + 25, y_start + idx * 30)
+                preset_label, (self.LEFT_COL_X + self.INDENT_WIDTH, y)
             )
 
     def draw_constants(self):
@@ -394,7 +425,7 @@ class App:
 
         # Constants section
         const_title = self._font.render("constants : [wasd]", True, self.TEXT_BLACK)
-        self._display_surf.blit(const_title, (self.RIGHT_COL_X, 40))
+        self._display_surf.blit(const_title, (self.RIGHT_COL_X, self.CONSTANTS_TITLE_Y))
 
         # Draw each constant
         for i, name in enumerate(self.constant_order):
@@ -403,24 +434,26 @@ class App:
             color = self.SELECTED_BLACK if is_selected else self.TEXT_BLACK
 
             if not name.startswith("B"):
-                # Default formatting
                 value_text = f"{int(value)}"
-                pos = (self.RIGHT_COL_X, 100 + i * 30)
+                pos = (self.RIGHT_COL_X, self.CONSTANTS_START_Y + i * self.LINE_HEIGHT)
             else:
-                # Kernel val formatting
                 value_text = f"{value:.2f}"
                 pos = (
-                    self.RIGHT_COL_X + 25,
-                    100 + (i + 1.5) * 30,
-                )  # Leave space after other constants
+                    self.RIGHT_COL_X + self.INDENT_WIDTH,
+                    self.CONSTANTS_START_Y
+                    + (i + self.KERNEL_VALUE_GAP) * self.LINE_HEIGHT,
+                )
 
-            # Show indicator for selected constant
             if is_selected:
                 indicator_left = self._font.render("-", True, color)
                 indicator_right = self._font.render("-", True, color)
-                self._display_surf.blit(indicator_left, (self.RIGHT_COL_X - 35, pos[1]))
                 self._display_surf.blit(
-                    indicator_right, (self.RIGHT_COL_X + 300, pos[1])
+                    indicator_left,
+                    (self.RIGHT_COL_X + self.INDICATOR_LEFT_OFFSET, pos[1]),
+                )
+                self._display_surf.blit(
+                    indicator_right,
+                    (self.RIGHT_COL_X + self.INDICATOR_RIGHT_OFFSET, pos[1]),
                 )
 
             const_text = self._font.render(f"{name} : {value_text}", True, color)
@@ -428,25 +461,26 @@ class App:
 
         # Draw kernel label
         kernel_label = self._font.render("turning kernel :", True, self.TEXT_BLACK)
-        self._display_surf.blit(kernel_label, (self.RIGHT_COL_X, 100 + 5.5 * 30))
+        kernel_y = self.CONSTANTS_START_Y + self.KERNEL_LABEL_ROW * self.LINE_HEIGHT
+        self._display_surf.blit(kernel_label, (self.RIGHT_COL_X, kernel_y))
 
     def draw_pheromones(self, world):
         """
         Draw pheromone trails as black circles, with opacity based on pheremone amount
         """
-        for y in range(256):
-            for x in range(256):
+        for y in range(self.WORLD_SIZE):
+            for x in range(self.WORLD_SIZE):
                 v = world[y, x]
                 if v > 0:
-                    intensity = min(int(v * 10), 255 - self.TRAIL_VALUE)
-                    color = (255 - intensity, 255 - intensity, 255 - intensity)
+                    intensity = min(
+                        int(v * self.PHEROMONE_INTENSITY_SCALE),
+                        255 - self.TRAIL_VALUE,
+                    )
+                    color = (255 - intensity,) * 3
                     pygame.draw.circle(
                         self._display_surf,
                         color,
-                        (
-                            x * self.SCALE,
-                            y * self.SCALE,
-                        ),
+                        (x * self.SCALE, y * self.SCALE),
                         self.SCALE,
                     )
 
@@ -457,10 +491,7 @@ class App:
         for ant in ants:
             pygame.draw.circle(
                 self._display_surf,
-                (200, 0, 0),
-                (
-                    ant.position[0] * self.SCALE,
-                    ant.position[1] * self.SCALE,
-                ),
+                self.ANT_COLOR,
+                (ant.position[0] * self.SCALE, ant.position[1] * self.SCALE),
                 self.SCALE,
             )
