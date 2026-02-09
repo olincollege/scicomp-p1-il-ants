@@ -3,6 +3,7 @@ import random
 from dataclasses import dataclass
 
 from ant import Ant, Direction
+from constants import SimulationConstants
 
 
 @dataclass
@@ -21,10 +22,12 @@ class Simulation:
 
     def __init__(
         self,
+        constants: SimulationConstants,
         world_size=(256, 256),
         spawn_point=(128, 128),
         seed=None,
     ):
+        self.constants = constants
         self.world: np.ndarray = np.zeros(world_size)
         self.ants: list[Ant] = []
         self.spawn_point: np.ndarray = np.array(spawn_point)
@@ -56,7 +59,8 @@ class Simulation:
             State(
                 world=self.world.copy(),
                 ants=[
-                    Ant(ant.position.copy(), ant.heading.copy()) for ant in self.ants
+                    Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
+                    for ant in self.ants
                 ],
             )
         )
@@ -74,7 +78,10 @@ class Simulation:
         self.time_step = time_step
         state = self.state_history[time_step]
         self.world = state.world.copy()
-        self.ants = [Ant(ant.position.copy(), ant.heading.copy()) for ant in state.ants]
+        self.ants = [
+            Ant(ant.position.copy(), ant.heading.copy(), ant.constants)
+            for ant in state.ants
+        ]
         return True
 
     def step_backward(self):
@@ -97,6 +104,7 @@ class Simulation:
             Ant(
                 self.spawn_point.copy(),
                 random.choice(self.SPAWN_DIRECTIONS),
+                self.constants,
             )
         )
 
@@ -105,7 +113,9 @@ class Simulation:
         # UPDATE
         for ant in self.ants:
             # DEPOSIT
-            self.world[ant.position[1], ant.position[0]] += Ant.PHEROMONE_DEPOSITION
+            self.world[
+                ant.position[1], ant.position[0]
+            ] += self.constants.pheromone_deposition
 
             # MOVE
             if not ant.move(self.world):

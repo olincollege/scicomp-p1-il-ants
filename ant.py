@@ -1,23 +1,14 @@
 import numpy as np
 import random
+from constants import SimulationConstants
 
 
 class Ant:
 
-    FIDELITY_MIN = 247  # phi_low
-    FIDELITY_DELTA = 0  # delta phi
-
-    PHEROMONE_DEPOSITION = 8  # tau
-    PHEROMONE_SATURATION = 0  # C_s
-
-    TURNING_KERNEL_RAW = np.array([0.36, 0.047, 0.008, 0.004])
-    TURNING_KERNEL = np.concatenate(
-        (np.array([1 - sum(TURNING_KERNEL_RAW)]), TURNING_KERNEL_RAW)
-    )
-
-    def __init__(self, position, heading):
+    def __init__(self, position, heading, constants: SimulationConstants):
         self.position: np.ndarray = position
         self.heading: Direction = heading
+        self.constants = constants
 
     def get_pheromone_value(
         self, world: np.ndarray, pos: np.ndarray, default: float = 0
@@ -35,12 +26,12 @@ class Ant:
         Returns bool representing whether the ant loses trail fidelity
         """
         curr = world[self.position[1], self.position[0]]
-        if curr < self.PHEROMONE_SATURATION:
+        if curr < self.constants.pheromone_saturation:
             thresh = (
-                self.FIDELITY_DELTA / self.PHEROMONE_SATURATION
-            ) * curr + self.FIDELITY_MIN
+                self.constants.fidelity_delta / self.constants.pheromone_saturation
+            ) * curr + self.constants.fidelity_min
         else:
-            thresh = self.FIDELITY_MIN + self.FIDELITY_DELTA
+            thresh = self.constants.fidelity_min + self.constants.fidelity_delta
         return np.random.randint(0, 256) >= thresh
 
     def move(self, world: np.ndarray) -> bool:
@@ -90,7 +81,9 @@ class Ant:
         """
         Returns new heading
         """
-        steps = np.random.choice(len(self.TURNING_KERNEL), p=self.TURNING_KERNEL)
+        steps = np.random.choice(
+            len(self.constants.turning_kernel), p=self.constants.turning_kernel
+        )
         dir = random.choice([-1, 1])
         return Direction.rotate(self.heading, dir * steps)
 

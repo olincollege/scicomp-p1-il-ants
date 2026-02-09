@@ -2,12 +2,13 @@ import time
 
 from simulation import Simulation
 from app import App
+import constants
 
 TIME_STEPS = 500
 STATIC = False
 
 if __name__ == "__main__":
-    s = Simulation(seed=42)
+    s = Simulation(constants=constants.FIG_3C, seed=42)
 
     if STATIC:
         start = time.time()
