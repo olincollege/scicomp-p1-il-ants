@@ -1,12 +1,23 @@
+"""
+PyGame application for running and displaying ant simulation
+"""
+
 import pygame
 import numpy as np
 
+from ant import Ant
 from simulation import Simulation
 from constants import SimulationConstants
 import constants
 
 
 class App:
+    """
+    PyGame application for visualizing and interacting with the ant simulation.
+    Takes a Simulation object as input, runs and displays the simulation,
+    and listens for user input to control the simulation and tweak constants.
+    """
+
     # Window
     WINDOW_WIDTH = 1920
     WINDOW_HEIGHT = 1080
@@ -121,8 +132,12 @@ class App:
         self.active_preset_key: int = None
 
     # region: PyGame Core
+    # PyGame boilerplate from [http://pygametutorials.wikidot.com/tutorials-basic]
 
     def on_init(self):
+        """
+        Initialize PyGame, set up display surface and clock
+        """
         pygame.init()
         self.display_surf = pygame.display.set_mode(
             (self.WINDOW_WIDTH, self.WINDOW_HEIGHT),
@@ -135,12 +150,18 @@ class App:
         self.running = True
 
     def on_event(self, event):
+        """
+        Called each loop: handle PyGame events, listening for quit and keypresses
+        """
         if event.type == pygame.QUIT:
             self.running = False
 
         self.handle_keypress(event)
 
     def on_loop(self):
+        """
+        Called each loop: update simulation, handle held inputs, and render ui
+        """
         if not self.paused:
             self.sim.step()
 
@@ -150,9 +171,15 @@ class App:
         self.clock.tick(self.frame_rate)
 
     def on_cleanup(self):
+        """
+        Cleanup PyGame resources on quit
+        """
         pygame.quit()
 
     def on_execute(self):
+        """
+        Main application loop
+        """
         self.on_init()
         while self.running:
             for event in pygame.event.get():
@@ -162,7 +189,11 @@ class App:
 
     # region: Key Input
 
-    def handle_keypress(self, event):
+    def handle_keypress(self, event: pygame.event.Event):
+        """
+        Listens for keypresses and triggers corresponding actions. Also tracks
+        key pressing and releasing to know when keys are being held.
+        """
         if event.type == pygame.KEYDOWN:
             # Quit
             if event.key == pygame.K_F8:
@@ -219,6 +250,11 @@ class App:
                 self.key_held[event.key] = False
 
     def handle_key_held(self):
+        """
+        Handle keys being held down for continuous actions.
+        Left and right arrow continuously step through the simulation,
+        'a' and 'd' continuously modify the selected constant.
+        """
         current_time = pygame.time.get_ticks()
         keys = pygame.key.get_pressed()
 
@@ -241,7 +277,8 @@ class App:
 
     def apply_preset(self, preset: SimulationConstants):
         """
-        Apply a constant preset
+        Apply a simulation constant preset, updating user_constants but not
+        applying to sim until restart
         """
         self.user_constants["fidelity min"] = preset.fidelity_min
         self.user_constants["fidelity delta"] = preset.fidelity_delta
@@ -252,7 +289,7 @@ class App:
 
     def modify_constant(self, polarity: int):
         """
-        Modify the selected constant by the given delta
+        Modify the selected constant in the direction of the polarity
 
         Args:
             polarity (int): +1 or -1, direction to change the constant
@@ -282,7 +319,8 @@ class App:
 
     def build_constants(self) -> SimulationConstants:
         """
-        Convert user_constants dict to SimulationConstants object
+        Convert user_constants dict to SimulationConstants object, used to
+        pass constants to Simulation during reset
         """
         kernel = np.array(
             [
@@ -304,6 +342,9 @@ class App:
     # region: Drawing
 
     def draw_loop(self):
+        """
+        Main display loop: clear screen, draw pheromones, ants, and control panel
+        """
         self.display_surf.fill(self.BG_COLOR)
         self.draw_pheromones(self.sim.world)
         self.draw_ants(self.sim.ants)
@@ -463,9 +504,12 @@ class App:
         kernel_y = self.CONSTANTS_START_Y + self.KERNEL_LABEL_ROW * self.LINE_HEIGHT
         self.display_surf.blit(kernel_label, (self.RIGHT_COL_X, kernel_y))
 
-    def draw_pheromones(self, world):
+    def draw_pheromones(self, world: np.ndarray):
         """
         Draw pheromone trails as black circles, with opacity based on pheremone amount
+
+        Args:
+            world (np.ndarray): 2D array representing pheromone levels, passed from Simulation
         """
         for y in range(self.WORLD_SIZE):
             for x in range(self.WORLD_SIZE):
@@ -483,9 +527,12 @@ class App:
                         self.SCALE,
                     )
 
-    def draw_ants(self, ants):
+    def draw_ants(self, ants: list[Ant]):
         """
         Draw ants as red circles
+
+        Args:
+            ants (list[Ant]): List of all ants in simulation, passed from Simulation
         """
         for ant in ants:
             pygame.draw.circle(
