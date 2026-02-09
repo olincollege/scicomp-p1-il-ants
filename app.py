@@ -17,6 +17,10 @@ class App:
     FONT_SIZE = 22
     KEY_HOLD_DELAY = 300  # milliseconds
 
+    # Layout constants
+    LEFT_COL_X = 1120
+    RIGHT_COL_X = 1520
+
     def __init__(self, sim: Simulation, static: bool):
         """
         Args:
@@ -278,6 +282,20 @@ class App:
         pygame.display.flip()
 
     def draw_control_panel(self):
+        """
+        Draw the right-side control panel, displaying keybind instructions and
+        allowing user to tweak constants
+        """
+        self.draw_divider_line()
+        self.draw_time_and_speed()
+        self.draw_instructions()
+        self.draw_constant_presets()
+        self.draw_constants()
+
+    def draw_divider_line(self):
+        """
+        Draw vertical line separating simulation and control panel
+        """
         pygame.draw.line(
             self._display_surf,
             self.TEXT_BLACK,
@@ -286,14 +304,15 @@ class App:
             3,
         )
 
-        LEFT_COL_X = 1120
-        RIGHT_COL_X = 1520
-
+    def draw_time_and_speed(self):
+        """
+        Draw text displaying current timestep and simulation speed
+        """
         # Draw timestep
         timestep_text = self._font.render(
             f"t : {self.sim.time_step}", True, self.TEXT_BLACK
         )
-        self._display_surf.blit(timestep_text, (LEFT_COL_X, 40))
+        self._display_surf.blit(timestep_text, (self.LEFT_COL_X, 40))
 
         # Draw speed
         speed_text = self._font.render(
@@ -301,9 +320,12 @@ class App:
             True,
             self.TEXT_BLACK,
         )
-        self._display_surf.blit(speed_text, (LEFT_COL_X, 70))
+        self._display_surf.blit(speed_text, (self.LEFT_COL_X, 70))
 
-        # Instructions
+    def draw_instructions(self):
+        """
+        Draw text displaying keybind instructions
+        """
         pause_text = self._font.render("pause : [space]", True, self.TEXT_BLACK)
         step_text = self._font.render("step : [←] [→]", True, self.TEXT_BLACK)
         speed_text = self._font.render("change speed : [q] [e]", True, self.TEXT_BLACK)
@@ -312,14 +334,18 @@ class App:
         )
 
         y_pos = np.arange(4) * 30 + 130
-        self._display_surf.blit(pause_text, (LEFT_COL_X, y_pos[0]))
-        self._display_surf.blit(step_text, (LEFT_COL_X, y_pos[1]))
-        self._display_surf.blit(speed_text, (LEFT_COL_X, y_pos[2]))
-        self._display_surf.blit(restart_text, (LEFT_COL_X, y_pos[3]))
+        self._display_surf.blit(pause_text, (self.LEFT_COL_X, y_pos[0]))
+        self._display_surf.blit(step_text, (self.LEFT_COL_X, y_pos[1]))
+        self._display_surf.blit(speed_text, (self.LEFT_COL_X, y_pos[2]))
+        self._display_surf.blit(restart_text, (self.LEFT_COL_X, y_pos[3]))
 
+    def draw_constant_presets(self):
+        """
+        Draw text displaying constant preset keybinds
+        """
         # Preset keybinds
         preset_title = self._font.render("constant presets :", True, self.TEXT_BLACK)
-        self._display_surf.blit(preset_title, (LEFT_COL_X, 280))
+        self._display_surf.blit(preset_title, (self.LEFT_COL_X, 280))
 
         presets_info = [
             "3A : [1]",
@@ -357,11 +383,18 @@ class App:
                 else self.TEXT_BLACK
             )
             preset_label = self._font.render(preset_text, True, color)
-            self._display_surf.blit(preset_label, (LEFT_COL_X + 25, y_start + idx * 30))
+            self._display_surf.blit(
+                preset_label, (self.LEFT_COL_X + 25, y_start + idx * 30)
+            )
+
+    def draw_constants(self):
+        """
+        Draw current constants and their values, with an indicator for the selected constant
+        """
 
         # Constants section
         const_title = self._font.render("constants : [wasd]", True, self.TEXT_BLACK)
-        self._display_surf.blit(const_title, (RIGHT_COL_X, 40))
+        self._display_surf.blit(const_title, (self.RIGHT_COL_X, 40))
 
         # Draw each constant
         for i, name in enumerate(self.constant_order):
@@ -372,12 +405,12 @@ class App:
             if not name.startswith("B"):
                 # Default formatting
                 value_text = f"{int(value)}"
-                pos = (RIGHT_COL_X, 100 + i * 30)
+                pos = (self.RIGHT_COL_X, 100 + i * 30)
             else:
                 # Kernel val formatting
                 value_text = f"{value:.2f}"
                 pos = (
-                    RIGHT_COL_X + 25,
+                    self.RIGHT_COL_X + 25,
                     100 + (i + 1.5) * 30,
                 )  # Leave space after other constants
 
@@ -385,15 +418,17 @@ class App:
             if is_selected:
                 indicator_left = self._font.render("-", True, color)
                 indicator_right = self._font.render("-", True, color)
-                self._display_surf.blit(indicator_left, (RIGHT_COL_X - 35, pos[1]))
-                self._display_surf.blit(indicator_right, (RIGHT_COL_X + 300, pos[1]))
+                self._display_surf.blit(indicator_left, (self.RIGHT_COL_X - 35, pos[1]))
+                self._display_surf.blit(
+                    indicator_right, (self.RIGHT_COL_X + 300, pos[1])
+                )
 
             const_text = self._font.render(f"{name} : {value_text}", True, color)
             self._display_surf.blit(const_text, pos)
 
         # Draw kernel label
         kernel_label = self._font.render("turning kernel :", True, self.TEXT_BLACK)
-        self._display_surf.blit(kernel_label, (RIGHT_COL_X, 100 + 5.5 * 30))
+        self._display_surf.blit(kernel_label, (self.RIGHT_COL_X, 100 + 5.5 * 30))
 
     def draw_pheromones(self, world):
         """
