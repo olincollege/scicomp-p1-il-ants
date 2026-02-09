@@ -197,11 +197,8 @@ class App:
         key pressing and releasing to know when keys are being held.
         """
         if event.type == pygame.KEYDOWN:
-            # Quit
-            if event.key == pygame.K_F8:
-                self.running = False
             # Pause
-            elif event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE:
                 self.paused = not self.paused
             # Reset
             elif event.key == pygame.K_r:
