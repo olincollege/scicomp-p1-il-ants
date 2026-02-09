@@ -3,6 +3,7 @@ import numpy as np
 
 from simulation import Simulation
 from constants import SimulationConstants
+import constants
 
 
 class App:
@@ -60,6 +61,22 @@ class App:
         }
         self.constant_order = list(self.user_constants.keys())
         self.selected_constant_idx = 0
+        self.active_preset_key = None  # Track which preset is currently active
+
+        # Preset mappings
+        self.preset_keys = {
+            pygame.K_1: constants.FIG_3A,
+            pygame.K_2: constants.FIG_3B,
+            pygame.K_3: constants.FIG_3C,
+            pygame.K_4: constants.FIG_4A,
+            pygame.K_5: constants.FIG_4B,
+            pygame.K_6: constants.FIG_4C,
+            pygame.K_7: constants.FIG_5A,
+            pygame.K_8: constants.FIG_5B,
+            pygame.K_9: constants.FIG_5C,
+            pygame.K_0: constants.FIG_6A,
+            pygame.K_MINUS: constants.FIG_6B,
+        }
 
     # region: PyGame Core
 
@@ -131,9 +148,15 @@ class App:
                 )
             # Modify constants
             elif event.key == pygame.K_a:
+                self.active_preset_key = None
                 self.modify_constant(-self.CONSTANT_STEP)
             elif event.key == pygame.K_d:
+                self.active_preset_key = None
                 self.modify_constant(self.CONSTANT_STEP)
+            # Apply presets
+            elif event.key in self.preset_keys:
+                self.active_preset_key = event.key
+                self.apply_preset(self.preset_keys[event.key])
 
             # Record keypress time to track hold length
             if (
@@ -172,6 +195,17 @@ class App:
                 action()
 
     # region: Constants
+
+    def apply_preset(self, preset: SimulationConstants):
+        """
+        Apply a constant preset
+        """
+        self.user_constants["fidelity min"] = preset.fidelity_min
+        self.user_constants["fidelity delta"] = preset.fidelity_delta
+        self.user_constants["pheromone deposition"] = preset.pheromone_deposition
+        self.user_constants["pheromone saturation"] = preset.pheromone_saturation
+        for i in range(5):
+            self.user_constants[f"B{i}"] = preset.turning_kernel[i]
 
     def modify_constant(self, delta):
         """
@@ -250,17 +284,61 @@ class App:
         self._display_surf.blit(timestep_text, (LEFT_COL_X, 40))
 
         # Instructions
-        pause_text = self._font.render("pause : space", True, self.TEXT_BLACK)
-        step_text = self._font.render("step : ← →", True, self.TEXT_BLACK)
-        restart_text = self._font.render("restart : r", True, self.TEXT_BLACK)
+        pause_text = self._font.render("pause : [space]", True, self.TEXT_BLACK)
+        step_text = self._font.render("step : [←] [→]", True, self.TEXT_BLACK)
+        restart_text = self._font.render(
+            "restart with new constants : [r]", True, self.TEXT_BLACK
+        )
 
         y_pos = np.arange(3) * 30 + 100
         self._display_surf.blit(pause_text, (LEFT_COL_X, y_pos[0]))
         self._display_surf.blit(step_text, (LEFT_COL_X, y_pos[1]))
         self._display_surf.blit(restart_text, (LEFT_COL_X, y_pos[2]))
 
+        # Preset keybinds
+        preset_title = self._font.render("constant presets :", True, self.TEXT_BLACK)
+        self._display_surf.blit(preset_title, (LEFT_COL_X, 220))
+
+        presets_info = [
+            "3A : [1]",
+            "3B : [2]",
+            "3C : [3]",
+            "4A : [4]",
+            "4B : [5]",
+            "4C : [6]",
+            "5A : [7]",
+            "5B : [8]",
+            "5C : [9]",
+            "6A : [0]",
+            "6B : [-]",
+        ]
+
+        y_start = 250
+        for idx, preset_text in enumerate(presets_info):
+            # Highlight the active preset
+            preset_key = [
+                pygame.K_1,
+                pygame.K_2,
+                pygame.K_3,
+                pygame.K_4,
+                pygame.K_5,
+                pygame.K_6,
+                pygame.K_7,
+                pygame.K_8,
+                pygame.K_9,
+                pygame.K_0,
+                pygame.K_MINUS,
+            ][idx]
+            color = (
+                self.SELECTED_BLACK
+                if preset_key == self.active_preset_key
+                else self.TEXT_BLACK
+            )
+            preset_label = self._font.render(preset_text, True, color)
+            self._display_surf.blit(preset_label, (LEFT_COL_X + 25, y_start + idx * 30))
+
         # Constants section
-        const_title = self._font.render("constants : wasd", True, self.TEXT_BLACK)
+        const_title = self._font.render("constants : [wasd]", True, self.TEXT_BLACK)
         self._display_surf.blit(const_title, (RIGHT_COL_X, 40))
 
         # Draw each constant
