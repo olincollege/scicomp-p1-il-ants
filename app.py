@@ -17,20 +17,25 @@ class App:
     FONT_SIZE = 22
     KEY_HOLD_DELAY = 300  # milliseconds
 
-    def __init__(self, sim: Simulation, static: bool, frame_rate: int = 60):
+    def __init__(self, sim: Simulation, static: bool):
         """
         Args:
             sim (Simulation): Simulation object to visualize
             static (bool): Whether to run simulation or just visualize final state
-            frame_rate (int, optional): Frame rate for visualization. Defaults to 60.
         """
         self.sim = sim
         self.static = static
-        self.frame_rate = frame_rate
         self._running = True
         self._display_surf = None
         self._clock = None
         self.paused = False
+
+        # Speed control
+        self.frame_rate = 30
+        self.speed_idx = 2
+        self.speed_options = [7, 15, 30, 60, 90]
+        self.speed_labels = ["0.25x", "0.5x", "1x", "2x", "3x"]
+
         self.key_hold_time = {
             pygame.K_RIGHT: 0,
             pygame.K_LEFT: 0,
@@ -154,6 +159,13 @@ class App:
             elif event.key in self.preset_keys:
                 self.active_preset_key = event.key
                 self.apply_preset(self.preset_keys[event.key])
+            # Speed control
+            elif event.key == pygame.K_q:
+                self.speed_idx = max(0, self.speed_idx - 1)
+                self.frame_rate = self.speed_options[self.speed_idx]
+            elif event.key == pygame.K_e:
+                self.speed_idx = min(len(self.speed_options) - 1, self.speed_idx + 1)
+                self.frame_rate = self.speed_options[self.speed_idx]
 
             # Record keypress time to track hold length
             if (
@@ -283,21 +295,31 @@ class App:
         )
         self._display_surf.blit(timestep_text, (LEFT_COL_X, 40))
 
+        # Draw speed
+        speed_text = self._font.render(
+            f"sim speed : {self.speed_labels[self.speed_idx]}",
+            True,
+            self.TEXT_BLACK,
+        )
+        self._display_surf.blit(speed_text, (LEFT_COL_X, 70))
+
         # Instructions
         pause_text = self._font.render("pause : [space]", True, self.TEXT_BLACK)
         step_text = self._font.render("step : [←] [→]", True, self.TEXT_BLACK)
+        speed_text = self._font.render("change speed : [q] [e]", True, self.TEXT_BLACK)
         restart_text = self._font.render(
             "restart with new constants : [r]", True, self.TEXT_BLACK
         )
 
-        y_pos = np.arange(3) * 30 + 100
+        y_pos = np.arange(4) * 30 + 130
         self._display_surf.blit(pause_text, (LEFT_COL_X, y_pos[0]))
         self._display_surf.blit(step_text, (LEFT_COL_X, y_pos[1]))
-        self._display_surf.blit(restart_text, (LEFT_COL_X, y_pos[2]))
+        self._display_surf.blit(speed_text, (LEFT_COL_X, y_pos[2]))
+        self._display_surf.blit(restart_text, (LEFT_COL_X, y_pos[3]))
 
         # Preset keybinds
         preset_title = self._font.render("constant presets :", True, self.TEXT_BLACK)
-        self._display_surf.blit(preset_title, (LEFT_COL_X, 220))
+        self._display_surf.blit(preset_title, (LEFT_COL_X, 280))
 
         presets_info = [
             "3A : [1]",
@@ -313,7 +335,7 @@ class App:
             "6B : [-]",
         ]
 
-        y_start = 250
+        y_start = 310
         for idx, preset_text in enumerate(presets_info):
             # Highlight the active preset
             preset_key = [

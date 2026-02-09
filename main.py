@@ -18,5 +18,5 @@ if __name__ == "__main__":
         print(f"Simulation time: {end - start:.2f} s")
         print("Num remaining ants:", len(s.ants))
 
-    app = App(s, STATIC, frame_rate=60)
+    app = App(s, STATIC)
     app.on_execute()
