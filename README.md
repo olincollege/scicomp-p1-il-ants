@@ -55,6 +55,20 @@ found in the [Algorithm Overview](#algorithm-overview) section.
 Constant presets match of specific figures from the paper, see
 [Results](#results) for more details.
 
+## Architecture Overview
+
+The code is organized into five main files:
+
+- `main.py`: Main entry point for the simulation. Initializes the simulation and
+  interactable app.
+- `ant.py`: Contains the `Ant` class and logic for ant movement.
+- `simulation.py`: Contains the `Simulation` class, which spawns in ants and
+  tracks pheromone levels.
+- `app.py`: Contains the `App` class, which uses pygame to create an interactive
+  visualization of the simulation.
+- `constants.py`: Contains the constant presets for different figures in the
+  paper.
+
 ## Algorithm Overview
 
 ### Ants
