@@ -468,7 +468,17 @@ frameborder="1"
     }
 
     </script>
-    <script>document.title="Ants SciComp P1"</script>
+    <script>
+      const TITLE = "Ants SciComp P1";
+    
+      document.title = TITLE;
+    
+      new MutationObserver(() => {
+        if (document.title !== TITLE) {
+          document.title = TITLE;
+        }
+      }).observe(document.querySelector("title"), { childList: true });
+    </script>
 
 </body>
 </html>
