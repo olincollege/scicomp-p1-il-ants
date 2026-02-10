@@ -136,24 +136,21 @@ $\phi_{min}$. The following constants were used:
 
 #### Figure 3A, $\phi_{min}$ = 255
 
-<img src="img/output/crop/3A_crop.png" height="300" />
-<img src="img/paper/paper_3A.png" height="300" />
-
-_Left: output from my simulation, Right: figure 3A from the paper_
+| My Simulation                                        | Paper Figure 3A                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/3A_crop.png" height="300"> | <img src="img/paper/paper_3A.png" height="300"> |
 
 #### Figure 3B, $\phi_{min}$ = 251
 
-<img src="img/output/crop/3B_crop.png" height="300" />
-<img src="img/paper/paper_3B.png" height="300" />
-
-_Left: output from my simulation, Right: figure 3B from the paper_
+| My Simulation                                        | Paper Figure 3B                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/3B_crop.png" height="300"> | <img src="img/paper/paper_3B.png" height="300"> |
 
 #### Figure 3C, $\phi_{min}$ = 247
 
-<img src="img/output/crop/3C_crop.png" height="300" />
-<img src="img/paper/paper_3C.png" height="300" />
-
-_Left: output from my simulation, Right: figure 3C from the paper_
+| My Simulation                                        | Paper Figure 3C                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/3C_crop.png" height="300"> | <img src="img/paper/paper_3C.png" height="300"> |
 
 In all three of these figures, my simulation yielded much higher trail density
 with many more ants still in the simulation. Curiously, the figures in the paper
@@ -177,24 +174,21 @@ $\tau$. The following constants were used:
 
 #### Figure 4A, $\tau$ = 12
 
-<img src="img/output/crop/4A_crop.png" height="300" />
-<img src="img/paper/paper_4A.png" height="300" />
-
-_Left: output from my simulation, Right: figure 4A from the paper_
+| My Simulation                                        | Paper Figure 4A                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/4A_crop.png" height="300"> | <img src="img/paper/paper_4A.png" height="300"> |
 
 #### Figure 4B, $\tau$ = 8
 
-<img src="img/output/crop/4B_crop.png" height="300" />
-<img src="img/paper/paper_4B.png" height="300" />
-
-_Left: output from my simulation, Right: figure 4B from the paper_
+| My Simulation                                        | Paper Figure 4B                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/4B_crop.png" height="300"> | <img src="img/paper/paper_4B.png" height="300"> |
 
 #### Figure 4C, $\tau$ = 4
 
-<img src="img/output/crop/4C_crop.png" height="300" />
-<img src="img/paper/paper_4C.png" height="300" />
-
-_Left: output from my simulation, Right: figure 4C from the paper_
+| My Simulation                                        | Paper Figure 4C                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/4C_crop.png" height="300"> | <img src="img/paper/paper_4C.png" height="300"> |
 
 A similar result to figure 3. My simulation yielded much higher trail density
 with many more ants still in the simulation. Figure 4C looks quite similar
@@ -215,24 +209,21 @@ following constants were used:
 
 #### Figure 5A, $\phi_{min}$ = 255
 
-<img src="img/output/crop/5A_crop.png" height="300" />
-<img src="img/paper/paper_5A.png" height="300" />
-
-_Left: output from my simulation, Right: figure 5A from the paper_
+| My Simulation                                        | Paper Figure 5A                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/5A_crop.png" height="300"> | <img src="img/paper/paper_5A.png" height="300"> |
 
 #### Figure 5B, $\phi_{min}$ = 251
 
-<img src="img/output/crop/5B_crop.png" height="300" />
-<img src="img/paper/paper_5B.png" height="300" />
-
-_Left: output from my simulation, Right: figure 5B from the paper_
+| My Simulation                                        | Paper Figure 5B                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/5B_crop.png" height="300"> | <img src="img/paper/paper_5B.png" height="300"> |
 
 #### Figure 5C, $\phi_{min}$ = 247
 
-<img src="img/output/crop/5C_crop.png" height="300" />
-<img src="img/paper/paper_5C.png" height="300" />
-
-_Left: output from my simulation, Right: figure 5C from the paper_
+| My Simulation                                        | Paper Figure 5C                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/5C_crop.png" height="300"> | <img src="img/paper/paper_5C.png" height="300"> |
 
 These figures match up fairly well, though the my simulation still has many more
 ants remaining. The narrower turning kernel results in much straighter and more
@@ -251,17 +242,15 @@ being changed. The following constants were used:
 
 #### Figure 6A, $C_s$ = 6
 
-<img src="img/output/crop/6A_crop.png" height="300" />
-<img src="img/paper/paper_6A.png" height="300" />
-
-_Left: output from my simulation, Right: figure 6A from the paper_
+| My Simulation                                        | Paper Figure 6A                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/6A_crop.png" height="300"> | <img src="img/paper/paper_6A.png" height="300"> |
 
 #### Figure 6B, $C_s$ = 18
 
-<img src="img/output/crop/6B_crop.png" height="300" />
-<img src="img/paper/paper_6B.png" height="300" />
-
-_Left: output from my simulation, Right: figure 6B from the paper_
+| My Simulation                                        | Paper Figure 6B                                 |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| <img src="img/output/crop/6B_crop.png" height="300"> | <img src="img/paper/paper_6B.png" height="300"> |
 
 These results also don't match up so well. In the paper, strong trails struggled
 to form, while my simulation shows a network of paths simular to figure 3.
