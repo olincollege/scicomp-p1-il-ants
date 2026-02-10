@@ -17,10 +17,10 @@ Alternatively, you can clone and run the code locally:
 git clone https://github.com/olincollege/scicomp-p1-il-ants.git
 cd scicomp-p1-il-ants
 
-# Create virtual environment
+# Create virtual environment (optional but recommended)
 python -m venv ants-venv
 
-# Activate virtual environment
+# Activate virtual environment (if created)
 # Linux / macOS:
 source ants-venv/bin/activate
 # Windows:
@@ -30,7 +30,7 @@ ants-venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run simulation
-python main.py
+python src/main.py
 ```
 
 ## Constants
