@@ -243,7 +243,7 @@ These figures match up fairly well, though the my simulation still has many more
 ants remaining. The narrower turning kernel results in much straighter and more
 clean trails, which matches the paper's results.
 
-#### Figure 6
+### Figure 6
 
 In figure 6, pheromone saturation is finally introduced and is the main variable
 being changed. The following constants were used:
