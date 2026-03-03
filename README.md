@@ -1,7 +1,7 @@
 # Scientific Computing Project 1: Ants
 
 Ant trail following simulation, reproducing results from the paper
-[Modelling the Formation of Trail Networks by Foragin Ants (Watmough and Edelstein-Keshet, 1995)](https://personal.math.ubc.ca/~keshet/pubs/JamesAnts.pdf).
+[Modeling the Formation of Trail Networks by Foraging Ants (Watmough and Edelstein-Keshet, 1995)](https://personal.math.ubc.ca/~keshet/pubs/JamesAnts.pdf).
 
 ![Simulation Screenshot](img/output/3C.png)
 
